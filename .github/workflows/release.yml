@@ -62,12 +62,12 @@ jobs:
       - name: Prepare signing key
         env:
           PLUGIN_SIGNING_KEY: ${{ secrets.PLUGIN_SIGNING_KEY }}
-          PLUGIN_PUBLISHER_ID: ${{ vars.PLUGIN_PUBLISHER_ID }}
+          PLUGIN_PUBLISHER_ID: ${{ vars.PLUGIN_PUBLISHER_ID || 'higanbana986' }}
           PLUGIN_PUBLIC_KEY: ${{ vars.PLUGIN_PUBLIC_KEY }}
         run: python3 scripts/release.py key --out "$RUNNER_TEMP/oauth-signing.key"
       - name: Build and verify platform packages
         env:
-          PLUGIN_PUBLISHER_ID: ${{ vars.PLUGIN_PUBLISHER_ID }}
+          PLUGIN_PUBLISHER_ID: ${{ vars.PLUGIN_PUBLISHER_ID || 'higanbana986' }}
         run: |
           for platform in linux-amd64 linux-arm64 darwin-amd64 darwin-arm64 windows-amd64; do
             python3 scripts/package.py --zboard .local/host --platform "$platform" --key "$RUNNER_TEMP/oauth-signing.key" --key-id "$PLUGIN_PUBLISHER_ID"
@@ -75,7 +75,7 @@ jobs:
       - name: Generate release metadata
         env:
           RELEASE_TAG: ${{ steps.identity.outputs.tag }}
-          PLUGIN_PUBLISHER_ID: ${{ vars.PLUGIN_PUBLISHER_ID }}
+          PLUGIN_PUBLISHER_ID: ${{ vars.PLUGIN_PUBLISHER_ID || 'higanbana986' }}
           PLUGIN_PUBLIC_KEY: ${{ vars.PLUGIN_PUBLIC_KEY }}
         run: python3 scripts/release.py metadata --tag "$RELEASE_TAG" --commit "$(git rev-parse HEAD)"
       - name: Publish immutable release

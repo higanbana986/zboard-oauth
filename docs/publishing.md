@@ -11,7 +11,7 @@ Create an environment named `release` and restrict it to reviewed release tags. 
 | Setting | Type | Value |
 | --- | --- | --- |
 | `PLUGIN_SIGNING_KEY` | Environment secret | Base64 Ed25519 private key (64 bytes before encoding) |
-| `PLUGIN_PUBLISHER_ID` | Environment variable | Stable publisher identifier, for example `higanbana986` |
+| `PLUGIN_PUBLISHER_ID` | Environment variable | Stable publisher identifier; defaults to `higanbana986` |
 | `PLUGIN_PUBLIC_KEY` | Environment variable | Matching base64 Ed25519 public key (32 bytes) |
 
 Generate keys with ZBoard's `pluginpackager -keygen` in a secure location. Keep the private key outside Git and distribute the public key through a trusted channel. CI development keys must never be reused for a public release.

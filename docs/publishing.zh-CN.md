@@ -11,7 +11,7 @@
 | 配置 | 类型 | 内容 |
 | --- | --- | --- |
 | `PLUGIN_SIGNING_KEY` | 环境 Secret | Base64 Ed25519 私钥（编码前 64 字节） |
-| `PLUGIN_PUBLISHER_ID` | 环境 Variable | 稳定发布者 ID，例如 `higanbana986` |
+| `PLUGIN_PUBLISHER_ID` | 环境 Variable | 稳定发布者 ID，默认 `higanbana986` |
 | `PLUGIN_PUBLIC_KEY` | 环境 Variable | 配套 Base64 Ed25519 公钥（32 字节） |
 
 在安全位置使用 ZBoard 的 `pluginpackager -keygen` 生成密钥。私钥不进入 Git，公钥通过可信渠道分发。CI 开发密钥不得用于公开发行。
