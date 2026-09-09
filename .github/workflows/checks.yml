@@ -1,6 +1,11 @@
 name: Checks
 on:
   workflow_call:
+    inputs:
+      source_ref:
+        type: string
+        required: false
+        default: ""
   pull_request:
     branches: [main]
   push:
@@ -12,6 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-go@v5
         with:
           go-version: '1.26.8'
@@ -36,5 +44,29 @@ jobs:
           ref: 96607bd84893be6fc355b5ebe12ff60b9eac86be
           path: .local/host
           persist-credentials: false
-      - name: Build and verify development package
-        run: python3 scripts/package.py --zboard .local/host --dev-key --platform linux-amd64
+      - name: Build and verify development packages
+        env:
+          BUILD_ALL_PLATFORMS: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: |
+          platforms="linux-amd64"
+          if [ "$BUILD_ALL_PLATFORMS" = 'true' ]; then
+            platforms="linux-amd64 linux-arm64 darwin-amd64 darwin-arm64 windows-amd64"
+          fi
+          for platform in $platforms; do
+            python3 scripts/package.py --zboard .local/host --dev-key --platform "$platform"
+          done
+      - name: Prepare development artifact notes and checksums
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: python3 scripts/development_artifacts.py
+      - name: Upload development packages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: oauth-development-${{ github.sha }}
+          path: |
+            dist/*.zbplugin
+            dist/SHA256SUMS
+            dist/README.md
+            dist/oauth-local-dev.pub
+          if-no-files-found: error
+          retention-days: 14

@@ -21,3 +21,5 @@ Checks cover formatting, race tests, vet, the gRPC process boundary, browser beh
 The SDK is pinned in `go.mod`; default checks use `GOWORK=off`. A local SDK workspace may be used for joint development, but run checks again against the locked dependency before submitting.
 
 Build targets are Linux amd64/arm64, macOS amd64/arm64 and Windows amd64. Cross-compilation does not certify target execution. See [Publishing](publishing.md) for signing and release automation.
+
+Successful pushes to `main` upload `oauth-development-<commit>` under the Checks run's Artifacts section. The archive contains five platform packages, SHA-256 checksums, a temporary development public key and test instructions. Artifacts expire after 14 days; only the public key is uploaded. These packages are for isolated test hosts and cannot be submitted as production releases. Pull requests and release preflight checks build only the Linux amd64 development package and do not publish artifacts.

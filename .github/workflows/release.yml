@@ -1,15 +1,25 @@
 name: Release
 on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release version, for example v0.0.1 (run from reviewed main or a release tag)'
+        type: string
+        required: true
+        default: v0.0.1
   push:
     tags: ['v*']
+    branches: ['release/v*']
 permissions:
   contents: read
 concurrency:
-  group: release-${{ github.ref }}
+  group: oauth-release
   cancel-in-progress: false
 jobs:
   checks:
     uses: ./.github/workflows/checks.yml
+    with:
+      source_ref: ${{ github.sha }}
   release:
     needs: checks
     runs-on: ubuntu-latest
@@ -19,6 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-go@v5
@@ -29,11 +40,18 @@ jobs:
         with:
           python-version: '3.12'
       - name: Verify release identity
+        id: identity
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          REQUESTED_VERSION: ${{ inputs.tag || github.ref_name }}
         run: |
-          python3 scripts/release.py check --tag "$RELEASE_TAG"
+          tag="${REQUESTED_VERSION#release/}"
+          python3 scripts/release.py check --tag "$tag"
           git merge-base --is-ancestor HEAD origin/main
+          if git show-ref --verify --quiet "refs/tags/$tag"; then
+            test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/$tag^{commit}")"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Fetch pinned host packager
         uses: actions/checkout@v4
         with:
@@ -56,21 +74,22 @@ jobs:
           done
       - name: Generate release metadata
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ steps.identity.outputs.tag }}
           PLUGIN_PUBLISHER_ID: ${{ vars.PLUGIN_PUBLISHER_ID }}
           PLUGIN_PUBLIC_KEY: ${{ vars.PLUGIN_PUBLIC_KEY }}
-        run: python3 scripts/release.py metadata --tag "$RELEASE_TAG" --commit "$GITHUB_SHA"
+        run: python3 scripts/release.py metadata --tag "$RELEASE_TAG" --commit "$(git rev-parse HEAD)"
       - name: Publish immutable release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          SOURCE_COMMIT: ${{ steps.identity.outputs.commit }}
+          RELEASE_TAG: ${{ steps.identity.outputs.tag }}
         run: |
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             echo 'Release already exists; inspect it instead of overwriting assets.' >&2
             exit 1
           fi
-          gh release create "$RELEASE_TAG" --verify-tag --draft --title "$RELEASE_TAG" --notes-file dist/release-notes.md
+          gh release create "$RELEASE_TAG" --target "$SOURCE_COMMIT" --draft --title "$RELEASE_TAG" --notes-file dist/release-notes.md
           gh release upload "$RELEASE_TAG" dist/*.zbplugin dist/SHA256SUMS dist/marketplace-entry.json
           gh release edit "$RELEASE_TAG" --draft=false
       - name: Remove signing key

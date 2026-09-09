@@ -18,6 +18,17 @@ Generate keys with ZBoard's `pluginpackager -keygen` in a secure location. Keep 
 
 The release workflow verifies the tag against main history, runs checks without release secrets, builds five target packages, validates their metadata, creates checksums and `marketplace-entry.json`, then publishes a GitHub Release. Existing releases are not overwritten. Failed draft releases remain drafts for inspection; remove an incomplete draft before retrying. A tag alone cannot publish if signing settings are missing.
 
+## Trigger a release
+
+After configuring the signing environment, choose a reviewed commit on `main` whose manifest and runtime versions agree. The initial release is `v0.0.1`.
+
+- Create `release/v0.0.1` from that commit to start a release without a pre-existing tag. After successful checks and signing, the workflow creates the tag and Release at the verified source commit.
+- Alternatively, push the matching `v0.0.1` tag, or use Actions → Release → Run workflow from the reviewed main commit or release tag and enter `v0.0.1`.
+
+The workflow checks out the selected ref, verifies it belongs to main history, and rejects a mismatched existing tag or an existing Release. All release jobs are serialized and use the `release` environment. If that environment restricts deployment refs, explicitly allow the release branches or use an already allowed tag; the workflow does not bypass environment rules.
+
+Checks artifacts are temporary development packages, separate from signed production Release assets. Keep production publisher keys stable across versions so hosts can verify upgrades.
+
 ## Submit to the market
 
 Download `marketplace-entry.json` from the release and use the [market submission template](https://github.com/zerodenet/plugins/issues/new?template=submit-plugin.yml). Submit its plugin entry to `catalogs/zboard.json` in a focused PR. The marketplace reviews identity and key ownership, verifies package signatures and records tested host/platform evidence. No cross-repository write token is required by this plugin workflow.

@@ -21,3 +21,5 @@ python3 scripts/package.py --zboard /path/to/zboard --dev-key --platform linux-a
 SDK 依赖锁定在 `go.mod`，默认检查使用 `GOWORK=off`。联合开发可以使用本地 SDK 工作区，但提交前须再用锁定依赖验证。
 
 支持交叉构建 Linux amd64/arm64、macOS amd64/arm64 和 Windows amd64。交叉编译通过不代表目标平台运行已验收。签名和自动发布见[发布指南](publishing.zh-CN.md)。
+
+成功推送到 `main` 后，Checks 运行页面的 Artifacts 区域会提供 `oauth-development-<提交号>`，包含五平台包、SHA-256 校验文件、临时开发公钥和测试说明，保留 14 天。仅上传公钥，不上传私钥。这些包仅用于隔离测试宿主，不能作为生产发行提交市场。PR 和正式发布前置检查仅构建 Linux amd64 开发包，不上传产物。
