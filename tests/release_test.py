@@ -40,6 +40,21 @@ class ReleaseTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             release.publisher({'PLUGIN_PUBLISHER_ID': 'oauth-local-dev'})
 
+    def test_copied_key_text_allows_surrounding_whitespace_only(self):
+        public = base64.b64encode(b'p' * 32).decode()
+        secret = base64.b64encode(b's' * 32 + b'p' * 32).decode()
+        env = {'PLUGIN_PUBLISHER_ID': 'test-publisher',
+               'PLUGIN_PUBLIC_KEY': ' ' + public + '\r\n',
+               'PLUGIN_SIGNING_KEY': '\n' + secret + '\r\n'}
+        with tempfile.TemporaryDirectory() as name:
+            path = Path(name) / 'private.key'
+            release.write_key(path, env)
+            self.assertEqual(path.read_text(), secret + '\n')
+            self.assertEqual(release.publisher(env)['public_key'], public)
+            env['PLUGIN_SIGNING_KEY'] = secret + 'invalid'
+            with self.assertRaises(ValueError):
+                release.write_key(Path(name) / 'invalid.key', env)
+
     def test_metadata_requires_every_platform_and_matching_package(self):
         manifest = release.check_version()
         pub = {'id': 'test-publisher', 'public_key': base64.b64encode(b'p' * 32).decode()}

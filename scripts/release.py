@@ -29,7 +29,7 @@ def check_version(root=ROOT, tag=None):
 
 
 def public_key(value):
-    key = base64.b64decode(value, validate=True)
+    key = base64.b64decode(value.strip(), validate=True)
     if len(key) != 32:
         raise ValueError('PLUGIN_PUBLIC_KEY must encode 32 bytes')
     return key
@@ -37,7 +37,7 @@ def public_key(value):
 
 def publisher(environ=os.environ):
     identity = environ.get('PLUGIN_PUBLISHER_ID', '')
-    key = environ.get('PLUGIN_PUBLIC_KEY', '')
+    key = environ.get('PLUGIN_PUBLIC_KEY', '').strip()
     if not re.fullmatch(r'[a-z0-9][a-z0-9._-]{0,79}', identity) or identity == 'oauth-local-dev':
         raise ValueError('set a non-development PLUGIN_PUBLISHER_ID')
     public_key(key)
@@ -46,7 +46,7 @@ def publisher(environ=os.environ):
 
 def write_key(out, environ=os.environ):
     pub = publisher(environ)
-    secret = environ.get('PLUGIN_SIGNING_KEY', '')
+    secret = environ.get('PLUGIN_SIGNING_KEY', '').strip()
     private = base64.b64decode(secret, validate=True)
     if len(private) != 64 or private[32:] != public_key(pub['public_key']):
         raise ValueError('PLUGIN_SIGNING_KEY must encode 64 bytes and match PLUGIN_PUBLIC_KEY')
