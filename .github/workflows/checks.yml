@@ -1,0 +1,40 @@
+name: Checks
+on:
+  workflow_call:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.8'
+          cache-dependency-path: go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sh scripts/check.sh
+      - name: Verify module lockfiles
+        env:
+          GOWORK: 'off'
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+      - name: Fetch pinned host packager
+        uses: actions/checkout@v4
+        with:
+          repository: zerodenet/zboard
+          ref: 96607bd84893be6fc355b5ebe12ff60b9eac86be
+          path: .local/host
+          persist-credentials: false
+      - name: Build and verify development package
+        run: python3 scripts/package.py --zboard .local/host --dev-key --platform linux-amd64

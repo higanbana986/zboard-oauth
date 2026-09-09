@@ -1,0 +1,27 @@
+# Publishing
+
+**English** · [简体中文](publishing.zh-CN.md)
+
+Each `vX.Y.Z` tag releases this plugin only. The manifest and runtime must both report `X.Y.Z`. Release v0.0.1 is the initial version of this independent repository.
+
+## Configure Actions
+
+Create an environment named `release` and restrict it to reviewed release tags. Configure:
+
+| Setting | Type | Value |
+| --- | --- | --- |
+| `PLUGIN_SIGNING_KEY` | Environment secret | Base64 Ed25519 private key (64 bytes before encoding) |
+| `PLUGIN_PUBLISHER_ID` | Environment variable | Stable publisher identifier, for example `higanbana986` |
+| `PLUGIN_PUBLIC_KEY` | Environment variable | Matching base64 Ed25519 public key (32 bytes) |
+
+Generate keys with ZBoard's `pluginpackager -keygen` in a secure location. Keep the private key outside Git and distribute the public key through a trusted channel. CI development keys must never be reused for a public release.
+
+The release workflow verifies the tag against main history, runs checks without release secrets, builds five target packages, validates their metadata, creates checksums and `marketplace-entry.json`, then publishes a GitHub Release. Existing releases are not overwritten. Failed draft releases remain drafts for inspection; remove an incomplete draft before retrying. A tag alone cannot publish if signing settings are missing.
+
+## Submit to the market
+
+Download `marketplace-entry.json` from the release and use the [market submission template](https://github.com/zerodenet/plugins/issues/new?template=submit-plugin.yml). Submit its plugin entry to `catalogs/zboard.json` in a focused PR. The marketplace reviews identity and key ownership, verifies package signatures and records tested host/platform evidence. No cross-repository write token is required by this plugin workflow.
+
+GitHub Release URLs redirect. Existing ZBoard versions that reject redirects must use offline import or a compatible direct-download mirror; a marketplace listing alone does not change that host restriction.
+
+Record real provider login and target-platform execution separately from CI. macOS signing/notarization is not supplied by these workflows.

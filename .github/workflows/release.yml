@@ -1,0 +1,78 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  checks:
+    uses: ./.github/workflows/checks.yml
+  release:
+    needs: checks
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.8'
+          cache-dependency-path: go.sum
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify release identity
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python3 scripts/release.py check --tag "$RELEASE_TAG"
+          git merge-base --is-ancestor HEAD origin/main
+      - name: Fetch pinned host packager
+        uses: actions/checkout@v4
+        with:
+          repository: zerodenet/zboard
+          ref: 96607bd84893be6fc355b5ebe12ff60b9eac86be
+          path: .local/host
+          persist-credentials: false
+      - name: Prepare signing key
+        env:
+          PLUGIN_SIGNING_KEY: ${{ secrets.PLUGIN_SIGNING_KEY }}
+          PLUGIN_PUBLISHER_ID: ${{ vars.PLUGIN_PUBLISHER_ID }}
+          PLUGIN_PUBLIC_KEY: ${{ vars.PLUGIN_PUBLIC_KEY }}
+        run: python3 scripts/release.py key --out "$RUNNER_TEMP/oauth-signing.key"
+      - name: Build and verify platform packages
+        env:
+          PLUGIN_PUBLISHER_ID: ${{ vars.PLUGIN_PUBLISHER_ID }}
+        run: |
+          for platform in linux-amd64 linux-arm64 darwin-amd64 darwin-arm64 windows-amd64; do
+            python3 scripts/package.py --zboard .local/host --platform "$platform" --key "$RUNNER_TEMP/oauth-signing.key" --key-id "$PLUGIN_PUBLISHER_ID"
+          done
+      - name: Generate release metadata
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          PLUGIN_PUBLISHER_ID: ${{ vars.PLUGIN_PUBLISHER_ID }}
+          PLUGIN_PUBLIC_KEY: ${{ vars.PLUGIN_PUBLIC_KEY }}
+        run: python3 scripts/release.py metadata --tag "$RELEASE_TAG" --commit "$GITHUB_SHA"
+      - name: Publish immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo 'Release already exists; inspect it instead of overwriting assets.' >&2
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" --verify-tag --draft --title "$RELEASE_TAG" --notes-file dist/release-notes.md
+          gh release upload "$RELEASE_TAG" dist/*.zbplugin dist/SHA256SUMS dist/marketplace-entry.json
+          gh release edit "$RELEASE_TAG" --draft=false
+      - name: Remove signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/oauth-signing.key"
