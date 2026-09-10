@@ -78,9 +78,9 @@ Google uses OIDC. Identity validation checks signature, issuer, audience, expiry
 
 ## Editing secrets
 
-The configuration page displays public settings and whether a secret exists, without returning the secret itself. In that UI, leave a stored secret blank to retain it, enter a value to replace it, or select the clear option to remove it. Changing the client, protocol, issuer, or token endpoint requires re-entering the secret.
+The configuration page displays public settings and whether a secret exists, without returning the secret itself. An update may omit `client_secret`; the plugin retains the stored secret when the client ID, protocol, issuer, preset, token endpoint, and token authentication method are unchanged. Entering a value replaces it, while `clear_secret: true` explicitly removes it. Changing one of those security-boundary fields requires re-entering the secret so a saved credential is never transferred across clients or token endpoints.
 
-These behaviors apply to the plugin configuration editor. An advanced JSON update replaces the submitted configuration; preserve the intended credentials when using that path. Configuration writes use a revision check. After a conflict, refresh and reapply changes.
+These behaviors also apply to advanced JSON updates. `clear_secret` is an update instruction and is removed from the normalized stored configuration. Configuration writes use a revision check. After a conflict, refresh and reapply changes.
 
 ## Account behavior
 

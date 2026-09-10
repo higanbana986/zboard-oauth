@@ -4,7 +4,9 @@
 
 Let users sign in to ZBoard with GitHub, Google, or your organization's identity provider. The plugin connects external OAuth2 / OpenID Connect providers to ZBoard's account registration and linking flows.
 
-**Plugin ID:** `zboard.oauth` · **Release version:** `v0.0.1`
+**Plugin ID:** `zboard.oauth` · **Release version:** `v0.0.2`
+
+The plugin owns the sign-in entry point, account linking/unlinking UI, and linked-account details in the administrator user view. ZBoard supplies only controlled slots plus identity mapping, authorization, session, and audit services.
 
 ## Providers
 
@@ -19,7 +21,7 @@ Configure up to 16 providers, with separate display names and enabled states. Th
 
 ## Requirements
 
-Use a ZBoard build implementing the multi-provider identity API, public configuration projection, and external registration flow required by this plugin. The manifest currently declares `>=0.0.1 <0.1.0`, plugin protocol `1`, and UI bridge `1`; check API support as well as the host's displayed version.
+Use a ZBoard build implementing identity slots, the controlled identity bridge, public configuration projection, and external registration flow required by this plugin. The manifest currently declares `>=0.0.2 <0.1.0`, plugin protocol `1`, and UI bridge `1`; check API support as well as the host's displayed version.
 
 A deployed site needs a public HTTPS base URL and a provider application registered with its callback URL. SMTP is required when a new user must verify an email address not supplied as verified by the provider.
 

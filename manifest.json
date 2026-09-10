@@ -3,12 +3,12 @@
   "id": "zboard.oauth",
   "name": "OAuth 登录",
   "description": "通过 GitHub、Google 或自定义 OAuth2 / OIDC 提供方登录与注册；账户和会话由核心管理。",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "requires": {
-    "zboard": ">=0.0.1 <0.1.0",
-    "recommended_zboard_version": "0.0.1",
+    "zboard": ">=0.0.2 <0.1.0",
+    "recommended_zboard_version": "0.0.2",
     "tested_zboard_versions": [
-      "0.0.1"
+      "0.0.2"
     ],
     "plugin_protocol": 1,
     "ui_bridge": 1
@@ -19,6 +19,8 @@
     "zboard.identity.provider.v1"
   ],
   "surfaces": [
+    "public",
+    "account",
     "admin"
   ],
   "components": {
@@ -33,6 +35,29 @@
         "surface": "admin",
         "title": "OAuth 提供方配置",
         "purpose": "configuration"
+      }
+    ],
+    "slots": [
+      {
+        "id": "login-methods",
+        "surface": "public",
+        "slot": "auth.login.methods",
+        "title": "OAuth 登录",
+        "entrypoint": "ui/login.html"
+      },
+      {
+        "id": "account-identities",
+        "surface": "account",
+        "slot": "account.security.identities",
+        "title": "OAuth 关联账号",
+        "entrypoint": "ui/account.html"
+      },
+      {
+        "id": "admin-user-identities",
+        "surface": "admin",
+        "slot": "admin.user.identities",
+        "title": "OAuth 关联账号",
+        "entrypoint": "ui/admin-user.html"
       }
     ]
   },
