@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release version, for example v0.0.2-dev.202609111158, v0.0.2-rc.1, or v0.0.2'
+        description: 'Release version, for example v0.0.2-dev.202609111242, v0.0.2-rc.1, or v0.0.2'
         type: string
         required: true
-        default: v0.0.2-dev.202609111158
+        default: v0.0.2-dev.202609111242
   push:
     tags: ['v*']
     branches: ['release/v*']
