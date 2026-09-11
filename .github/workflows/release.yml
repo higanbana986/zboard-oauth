@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release version, for example v0.0.2 (run from reviewed main or a release tag)'
+        description: 'Release version, for example v0.0.2-dev.202609111158, v0.0.2-rc.1, or v0.0.2'
         type: string
         required: true
-        default: v0.0.2
+        default: v0.0.2-dev.202609111158
   push:
     tags: ['v*']
     branches: ['release/v*']
@@ -89,7 +89,11 @@ jobs:
             echo 'Release already exists; inspect it instead of overwriting assets.' >&2
             exit 1
           fi
-          gh release create "$RELEASE_TAG" --target "$SOURCE_COMMIT" --draft --title "$RELEASE_TAG" --notes-file dist/release-notes.md
+          release_flags=()
+          case "$RELEASE_TAG" in
+            *-dev.*|*-rc.*) release_flags+=(--prerelease) ;;
+          esac
+          gh release create "$RELEASE_TAG" --target "$SOURCE_COMMIT" --draft "${release_flags[@]}" --title "$RELEASE_TAG" --notes-file dist/release-notes.md
           gh release upload "$RELEASE_TAG" dist/*.zbplugin dist/SHA256SUMS dist/marketplace-entry.json
           gh release edit "$RELEASE_TAG" --draft=false
       - name: Remove signing key
