@@ -12,7 +12,7 @@
     pending.delete(m.request_id);
     clearTimeout(request.timer);
     if (m.ok === true) request.resolve(m.result);
-    else request.reject(new Error('宿主拒绝请求或操作失败，请查看插件管理中的操作记录。'));
+    else request.reject(new Error(typeof m.error === 'string' ? m.error.slice(0, 300) : '操作未完成，请重试。'));
   };
   addEventListener('message', receive);
   window.oauthBridge = {
@@ -24,10 +24,25 @@
         const timer = setTimeout(() => {
           pending.delete(request_id);
           reject(new Error('宿主响应超时。若刚执行保存，请先刷新状态再重试。'));
-        }, 25000);
+        }, ['identity.bind.start', 'identity.binding.unlink'].includes(type) ? 300000 : 25000);
         pending.set(request_id, { resolve, reject, timer });
         parent.postMessage({ ...payload, source: 'zboard-plugin-ui', bridge_token: token, request_id, type }, '*');
       });
+    },
+    observeSize(root) {
+      // Measure content, never the iframe viewport (which includes the last reported height).
+      let previous = -1;
+      const resize = () => {
+        const height = Math.ceil(root.getBoundingClientRect().height);
+        if (height === previous) return;
+        previous = height;
+        window.oauthBridge.resize(height);
+      };
+      const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(resize);
+      observer?.observe(root);
+      addEventListener('pagehide', () => observer?.disconnect(), { once: true });
+      resize();
+      return resize;
     },
     resize(height) {
       if (!closed && token) parent.postMessage({ source: 'zboard-plugin-ui', bridge_token: token, type: 'ui.resize', height }, '*');
