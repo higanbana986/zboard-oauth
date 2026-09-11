@@ -20,11 +20,13 @@ def main():
     parser.add_argument('--zboard', type=Path, default=os.environ.get('ZBOARD_DIR'),
                         help='ZBoard checkout containing backend/tools/pluginpackager; or set ZBOARD_DIR')
     parser.add_argument('--platform', help='GOOS-GOARCH; defaults to this Go toolchain host')
-    keys = parser.add_mutually_exclusive_group(required=True)
+    keys = parser.add_mutually_exclusive_group()
     keys.add_argument('--key', type=Path, help='base64 Ed25519 private key, outside source control')
     keys.add_argument('--dev-key', action='store_true', help='create/reuse an ignored local development key')
     parser.add_argument('--key-id', help='publisher key ID; required with --key')
     args = parser.parse_args()
+    if args.key is None:
+        args.dev_key = True
     if args.zboard is None:
         parser.error('provide --zboard or ZBOARD_DIR; the host is maintained in a separate repository')
     if not args.dev_key and (not args.key_id or args.key_id == 'oauth-local-dev'):
@@ -68,7 +70,8 @@ def main():
         print(package)
     if args.dev_key:
         print(f'Development publisher public key: {key}.pub')
-        print('Add that public key to plugins.trusted_publishers only on your test host.')
+        print('Import on your test host and confirm the plugin signing key in the preview dialog.')
+        print('For older hosts or packages without an embedded key, use the public key shown above.')
 
 
 if __name__ == '__main__':

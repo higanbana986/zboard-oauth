@@ -40,7 +40,7 @@ ZBoard currently provides encrypted JSON private storage and declarative migrati
 
 ## Trust and isolation
 
-Catalog signatures establish index provenance; package signatures establish artifact provenance and integrity. Hosts maintain trust for both roles. A public key included in a catalog does not automatically become trusted.
+Catalog signatures establish index provenance; package signatures establish artifact provenance and integrity. Hosts maintain trust for both roles. An unsigned registry entry cannot grant trust. On hosts supporting scoped trust, a catalog signed by an already trusted market can attest a publisher key for a specific plugin; an offline package from an unknown source requires administrator confirmation. Neither path grants extra host capabilities.
 
 ZBoard's current native service components run as trusted code in separate processes. The host does not provide an OS sandbox for arbitrary third-party binaries. Each future host must define its own runtime, system permission, and resource-isolation model.
 
