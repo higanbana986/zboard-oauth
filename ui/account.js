@@ -1,14 +1,14 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   let providers = [], bindings = [], busy = false;
-  const resize = () => oauthBridge.resize(document.documentElement.scrollHeight + 8);
+  const resize = oauthBridge.observeSize(document.querySelector('main'));
   const providerName = (id) => providers.find((item) => item.id === id)?.name || id;
   const setNotice = (text, error = false) => { $('notice').textContent = text; $('notice').className = error ? 'error' : 'success'; resize(); };
   const setBusy = (value) => { busy = value; for (const button of document.querySelectorAll('button')) button.disabled = value || button.textContent === '已绑定'; };
   function details(binding) {
     const box = document.createElement('div'); box.className = 'identity-details';
     const title = document.createElement('strong'); title.textContent = providerName(binding.provider_id); box.append(title);
-    for (const [label, value] of [['来源', binding.publisher], ['Issuer', binding.issuer], ['第三方账号标识', binding.subject], ['绑定时间', new Date(binding.created_at).toLocaleString()]]) {
+    for (const [label, value] of [['Issuer', binding.issuer], ['第三方账号标识', binding.subject], ['绑定时间', new Date(binding.created_at).toLocaleString()]]) {
       const line = document.createElement('small'); line.textContent = `${label}：${value || '—'}`; box.append(line);
     }
     return box;
@@ -32,14 +32,14 @@
     [providers, bindings] = await Promise.all([oauthBridge.request('identity.providers.list'), oauthBridge.request('identity.bindings.list')]); render();
   }
   async function bind(providerID) {
-    if (busy) return; setBusy(true); setNotice('等待 ZBoard 确认账户密码…');
+    if (busy) return; setBusy(true); setNotice('正在验证账户并处理请求…');
     try { await oauthBridge.request('identity.bind.start', { provider_id: providerID }); }
-    catch { setNotice('绑定未开始，请检查密码和提供方状态。', true); setBusy(false); }
+    catch (error) { setNotice(error.message || '绑定未开始，请检查提供方状态。', true); setBusy(false); }
   }
   async function unlink(identityID) {
-    if (busy) return; setBusy(true); setNotice('等待 ZBoard 确认账户密码…');
+    if (busy) return; setBusy(true); setNotice('正在验证账户并处理请求…');
     try { await oauthBridge.request('identity.binding.unlink', { identity_id: identityID }); await refresh(); setNotice('第三方账号已解绑。'); }
-    catch { setNotice('解绑失败，请检查密码并刷新重试。', true); }
+    catch (error) { setNotice(error.message || '解绑失败，请刷新重试。', true); }
     finally { setBusy(false); }
   }
   (async () => { try { const context = await oauthBridge.request('context.load'); if (context.plugin_id !== 'zboard.oauth' || context.slot !== 'account.security.identities' || context.surface !== 'account') throw new Error('invalid slot'); await refresh(); } catch { setNotice('OAuth 关联账号加载失败。', true); } })();
