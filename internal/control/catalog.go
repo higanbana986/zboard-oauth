@@ -31,6 +31,7 @@ func (s *Server) DescribeConfig(_ context.Context, r *pluginv1.ConfigRequest) (*
 		hasSecret := entry.ClientSecret != ""
 		entry.ClientSecret = ""
 		entry.KeepSecret = false
+		entry.ClearSecret = false
 		raw, _ := json.Marshal(entry)
 		view := map[string]any{}
 		_ = json.Unmarshal(raw, &view)
@@ -52,21 +53,31 @@ func preserveSecrets(c *config.Config, previous []byte) error {
 	}
 	for i := range entries {
 		entry := &entries[i]
-		if !entry.KeepSecret {
+		if entry.ClearSecret {
+			entry.ClearSecret = false
+			entry.KeepSecret = false
 			continue
 		}
 		if entry.ClientSecret != "" {
-			return errors.New("choose either retaining or replacing a client secret")
+			if entry.KeepSecret {
+				return errors.New("choose either retaining or replacing a client secret")
+			}
+			entry.KeepSecret = false
+			continue
 		}
 		found := false
+		hadPriorSecret := false
 		for _, prior := range old.Entries() {
+			if prior.ID == entry.ID && prior.ClientSecret != "" {
+				hadPriorSecret = true
+			}
 			if prior.ID == entry.ID && prior.Issuer == entry.Issuer && prior.ClientID == entry.ClientID && prior.Protocol == entry.Protocol && prior.Preset == entry.Preset && prior.TokenEndpoint == entry.TokenEndpoint && prior.TokenAuthMethod == entry.TokenAuthMethod {
 				entry.ClientSecret = prior.ClientSecret
 				found = true
 				break
 			}
 		}
-		if !found {
+		if !found && (entry.KeepSecret || hadPriorSecret) {
 			return errors.New("re-enter the secret when changing the client or provider endpoints")
 		}
 		entry.KeepSecret = false

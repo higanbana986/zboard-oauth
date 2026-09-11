@@ -20,7 +20,7 @@
  }
  function show(view){if(!view||!Number.isSafeInteger(view.revision)||typeof view.configured!=='boolean')throw new Error('配置状态无效');revision=view.revision;entries=view.config?.providers||[];if(!Array.isArray(entries)||entries.length>16)throw new Error('提供方配置无效');$('state').textContent=`配置版本 ${revision} · ${entries.length} 个提供方`;render();}
  async function refresh(){if(busy)return;lock(true);try{const context=await oauthBridge.request('context.load');if(context.plugin_id!=='zboard.oauth'||context.surface!=='admin'||context.page_id!=='settings')throw new Error('需要管理员配置会话');show(await oauthBridge.request('config.load'));draft=null;selected=-1;notice('选择提供方编辑，或使用快捷配置添加。');}catch(err){revision=null;notice(err.message,true);}finally{lock(false);}}
- function stored(entry){const value={...entry};delete value.has_secret;delete value.client_secret;if(entry.has_secret)value.keep_secret=true;return value;}
+ function stored(entry){const value={...entry};delete value.has_secret;delete value.client_secret;delete value.keep_secret;delete value.clear_secret;return value;}
  async function persist(next){
   lock(true);notice('正在保存…');
   try{await oauthBridge.request('config.save',{revision,config:{providers:next}});show(await oauthBridge.request('config.load'));draft=null;selected=-1;notice('已保存。插件启用后，登录和注册页会显示相应入口。');}
@@ -34,7 +34,7 @@
   if(selected<0&&entries.some(entry=>entry.id===value.id)){notice('提供方标识已存在。',true);return;}
   if(value.preset!=='custom'){for(const key of ['protocol','issuer','authorization_endpoint','token_endpoint','userinfo_endpoint','subject_field','email_field','email_verified_field','token_auth_method','scopes'])delete value[key];}
   const secret=$('client-secret').value;
-  if(secret)value.client_secret=secret;else if(draft.has_secret&&!$('clear-secret').checked)value.keep_secret=true;
+  if(secret)value.client_secret=secret;else if($('clear-secret').checked)value.clear_secret=true;
   const next=entries.map(stored);if(selected>=0)next[selected]=value;else next.push(value);await persist(next);
  });
  $('remove').addEventListener('click',async()=>{if(busy||selected<0||revision===null)return;await persist(entries.filter((_,index)=>index!==selected).map(stored));});

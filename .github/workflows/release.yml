@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release version, for example v0.0.1 (run from reviewed main or a release tag)'
+        description: 'Release version, for example v0.0.2 (run from reviewed main or a release tag)'
         type: string
         required: true
-        default: v0.0.1
+        default: v0.0.2
   push:
     tags: ['v*']
     branches: ['release/v*']
@@ -56,7 +56,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: zerodenet/zboard
-          ref: 96607bd84893be6fc355b5ebe12ff60b9eac86be
+          ref: a8fca1ba3fe667dc6157a64e682300155392bd29
           path: .local/host
           persist-credentials: false
       - name: Prepare signing key

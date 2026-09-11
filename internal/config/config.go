@@ -18,6 +18,7 @@ const MaxBytes = 64 << 10
 
 type Config struct {
 	KeepSecret            bool     `json:"keep_secret,omitempty"`
+	ClearSecret           bool     `json:"clear_secret,omitempty"`
 	Providers             []Config `json:"providers,omitempty"`
 	ID                    string   `json:"id,omitempty"`
 	Name                  string   `json:"name,omitempty"`
@@ -123,6 +124,9 @@ func Parse(raw []byte) (Config, error) {
 	}
 	if c.TokenAuthMethod != "basic" && c.TokenAuthMethod != "post" && c.TokenAuthMethod != "none" {
 		return Config{}, errors.New("invalid token authentication method")
+	}
+	if c.KeepSecret && c.ClearSecret || c.ClearSecret && c.ClientSecret != "" {
+		return Config{}, errors.New("choose only one client secret action")
 	}
 	if c.TokenAuthMethod == "none" && c.ClientSecret != "" {
 		return Config{}, errors.New("public client must not have a client secret")

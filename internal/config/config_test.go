@@ -26,7 +26,7 @@ func TestConfigurationLifecycle(t *testing.T) {
 	}
 }
 func TestRejectMalformedConfiguration(t *testing.T) {
-	cases := []string{"", "  ", "null", "[]", "{}{}", `{"unexpected":true}`, `{"issuer":"https://login.example.com"}`, `{"client_id":"test"}`, `{"issuer":"http://login.example.com","client_id":"test"}`, `{"issuer":"https://login.example.com","client_id":"test","scopes":["email"]}`, `{"issuer":"https://login.example.com","client_id":"test","scopes":["openid","bad scope"]}`, `{"issuer":"https://login.example.com","client_id":"test","client_secret":"secret\n"}`, strings.Repeat(" ", MaxBytes+1)}
+	cases := []string{"", "  ", "null", "[]", "{}{}", `{"unexpected":true}`, `{"issuer":"https://login.example.com"}`, `{"client_id":"test"}`, `{"issuer":"http://login.example.com","client_id":"test"}`, `{"issuer":"https://login.example.com","client_id":"test","scopes":["email"]}`, `{"issuer":"https://login.example.com","client_id":"test","scopes":["openid","bad scope"]}`, `{"issuer":"https://login.example.com","client_id":"test","client_secret":"secret\n"}`, `{"issuer":"https://login.example.com","client_id":"test","client_secret":"secret","clear_secret":true}`, `{"issuer":"https://login.example.com","client_id":"test","keep_secret":true,"clear_secret":true}`, strings.Repeat(" ", MaxBytes+1)}
 	for i, raw := range cases {
 		if _, err := Parse([]byte(raw)); err == nil {
 			t.Errorf("case %d accepted", i)

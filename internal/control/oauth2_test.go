@@ -82,10 +82,10 @@ func TestConfigurationProjectionAndSecretRetention(t *testing.T) {
 	if err != nil || strings.Contains(string(view.NormalizedJson), "never-echo") || strings.Contains(string(view.NormalizedJson), "other-secret") || !strings.Contains(string(view.NormalizedJson), `"has_secret":true`) {
 		t.Fatal("secret projection failed")
 	}
-	next := []byte(`{"providers":[{"id":"gh","preset":"github","client_id":"client","disabled":true,"keep_secret":true}]}`)
+	next := []byte(`{"providers":[{"id":"gh","preset":"github","client_id":"client","disabled":true}]}`)
 	out, err := s.ValidateConfig(ctx, &pluginv1.ConfigRequest{ConfigJson: next, PreviousConfigJson: old})
 	if err != nil || !strings.Contains(string(out.NormalizedJson), "never-echo") || strings.Contains(string(out.NormalizedJson), "other-secret") {
-		t.Fatal("retention or deletion incorrect", err)
+		t.Fatal("omitted secret was not retained or removed provider survived", err)
 	}
 	if _, err := s.ApplyConfig(ctx, &pluginv1.ConfigRequest{ConfigJson: out.NormalizedJson}); err != nil {
 		t.Fatal(err)
@@ -98,8 +98,14 @@ func TestConfigurationProjectionAndSecretRetention(t *testing.T) {
 	if _, err := s.ValidateConfig(ctx, &pluginv1.ConfigRequest{ConfigJson: changed, PreviousConfigJson: old}); err == nil {
 		t.Fatal("secret transferred to changed client")
 	}
-	if _, err := s.ValidateConfig(ctx, &pluginv1.ConfigRequest{ConfigJson: next}); err == nil {
-		t.Fatal("secret retention without host snapshot accepted")
+	cleared := []byte(`{"providers":[{"id":"gh","preset":"github","client_id":"client","clear_secret":true}]}`)
+	clearedOut, err := s.ValidateConfig(ctx, &pluginv1.ConfigRequest{ConfigJson: cleared, PreviousConfigJson: old})
+	if err != nil || strings.Contains(string(clearedOut.NormalizedJson), "never-echo") || strings.Contains(string(clearedOut.NormalizedJson), "clear_secret") {
+		t.Fatal("explicit secret clearing failed", err)
+	}
+	legacyKeep := []byte(`{"providers":[{"id":"gh","preset":"github","client_id":"client","keep_secret":true}]}`)
+	if _, err := s.ValidateConfig(ctx, &pluginv1.ConfigRequest{ConfigJson: legacyKeep}); err == nil {
+		t.Fatal("explicit retention without a host snapshot accepted")
 	}
 }
 func TestOAuthProfileVerificationIsStrictAndSubjectIsRequired(t *testing.T) {
