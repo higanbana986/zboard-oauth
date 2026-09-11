@@ -3,7 +3,7 @@
   "id": "zboard.oauth",
   "name": "OAuth 登录",
   "description": "通过 GitHub、Google 或自定义 OAuth2 / OIDC 提供方登录与注册；账户和会话由核心管理。",
-  "version": "0.0.2-dev.202609111158",
+  "version": "0.0.2-dev.202609111242",
   "requires": {
     "zboard": ">=0.0.2 <0.1.0",
     "recommended_zboard_version": "0.0.2",
