@@ -12,14 +12,15 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = 'https://github.com/higanbana986/zboard-oauth'
 PLATFORMS = ('linux-amd64', 'linux-arm64', 'darwin-amd64', 'darwin-arm64', 'windows-amd64')
-VERSION = re.compile(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)')
+NUMBER = r'(?:0|[1-9][0-9]*)'
+VERSION = re.compile(rf'{NUMBER}\.{NUMBER}\.{NUMBER}(?:-(?:dev|rc)\.{NUMBER}(?:\.{NUMBER})*)?')
 
 
 def check_version(root=ROOT, tag=None):
     manifest = json.loads((root / 'manifest.json').read_text())
     version = manifest['version']
     if not VERSION.fullmatch(version):
-        raise ValueError('manifest.version must be an unprefixed stable semantic version')
+        raise ValueError('manifest.version must be an unprefixed stable, rc, or dev semantic version')
     runtime = re.search(r'^const Version = "([^"]+)"$', (root / 'internal/control/server.go').read_text(), re.M)
     if not runtime or runtime[1] != version:
         raise ValueError('manifest and runtime versions differ')

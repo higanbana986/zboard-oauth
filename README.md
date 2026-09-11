@@ -4,7 +4,7 @@
 
 Let users sign in to ZBoard with GitHub, Google, or your organization's identity provider. The plugin connects external OAuth2 / OpenID Connect providers to ZBoard's account registration and linking flows.
 
-**Plugin ID:** `zboard.oauth` · **Release version:** `v0.0.2`
+**Plugin ID:** `zboard.oauth` · **Release version:** `v0.0.2-dev.202609111158`
 
 The plugin owns the sign-in entry point, account linking/unlinking UI, and linked-account details in the administrator user view. ZBoard supplies only controlled slots plus identity mapping, authorization, session, and audit services.
 
