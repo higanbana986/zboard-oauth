@@ -2,7 +2,7 @@
 
 **English** · [简体中文](publishing.zh-CN.md)
 
-Each SemVer tag releases this plugin only. Development versions use `vX.Y.Z-dev.N`, release candidates use `vX.Y.Z-rc.N`, and stable versions use `vX.Y.Z`. The manifest and runtime must report the same version without the leading `v`. The current development release is `v0.0.2-dev.202609111158`.
+Each SemVer tag releases this plugin only. Development versions use `vX.Y.Z-dev.N`, release candidates use `vX.Y.Z-rc.N`, and stable versions use `vX.Y.Z`. The manifest and runtime must report the same version without the leading `v`. The current development release is `v0.0.2-dev.202609111242`.
 
 ## Configure Actions
 
@@ -20,9 +20,9 @@ The release workflow verifies the tag against main history, runs checks without 
 
 ## Trigger a release
 
-After configuring the signing environment, choose a reviewed commit on `main` whose manifest and runtime versions agree. The current release is `v0.0.2-dev.202609111158`.
+After configuring the signing environment, choose a reviewed commit on `main` whose manifest and runtime versions agree. The current release is `v0.0.2-dev.202609111242`.
 
-- Create `release/v0.0.2-dev.202609111158` from that commit to start a release without a pre-existing tag. After successful checks and signing, the workflow creates the tag and prerelease at the verified source commit.
+- Create `release/v0.0.2-dev.202609111242` from that commit to start a release without a pre-existing tag. After successful checks and signing, the workflow creates the tag and prerelease at the verified source commit.
 - Alternatively, push the matching tag, or use Actions → Release → Run workflow from the reviewed main commit or release tag and enter the exact SemVer tag.
 
 The workflow checks out the selected ref, verifies it belongs to main history, and rejects a mismatched existing tag or an existing Release. All release jobs are serialized and use the `release` environment. If that environment restricts deployment refs, explicitly allow the release branches or use an already allowed tag; the workflow does not bypass environment rules.

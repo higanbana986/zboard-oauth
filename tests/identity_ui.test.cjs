@@ -19,12 +19,13 @@ function fixture(page, responses) {
   for (const id of ids) elements.set(id, element());
   const calls = [];
   const document = {
+    querySelector: () => ({}),
     getElementById: (id) => elements.get(id),
     createElement: (tag) => { const value = element(tag); created.push(value); return value; },
     querySelectorAll: (selector) => selector === 'button' ? created.filter((value) => value.tag === 'button') : [],
     documentElement: { scrollHeight: 200 },
   };
-  const oauthBridge = { resize() {}, async request(type, body) { calls.push({ type, body }); const value = responses[type]; return typeof value === 'function' ? value(body) : value; } };
+  const oauthBridge = { observeSize: () => () => {}, resize() {}, async request(type, body) { calls.push({ type, body }); const value = responses[type]; return typeof value === 'function' ? value(body) : value; } };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, `../ui/${page}.js`), 'utf8'), { document, oauthBridge, Date, Array, Error });
   return { elements, calls };
 }
@@ -42,7 +43,7 @@ test('login slot renders only its providers and starts through the identity brid
   assert.deepEqual(JSON.parse(JSON.stringify(f.calls.at(-1))), { type: 'identity.login.start', body: { provider_id: 'zboard.oauth~github' } });
 });
 
-test('account slot shows source details and delegates password confirmation to the host', async () => {
+test('account slot shows identity details without publisher attribution and delegates password confirmation to the host', async () => {
   const f = fixture('account', {
     'context.load': { plugin_id: 'zboard.oauth', surface: 'account', slot: 'account.security.identities' },
     'identity.providers.list': [{ id: 'zboard.oauth~github', name: 'GitHub' }],
@@ -51,7 +52,8 @@ test('account slot shows source details and delegates password confirmation to t
   });
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(f.elements.get('bindings').children.length, 1);
-  assert.match(f.elements.get('bindings').children[0].children[0].children[1].textContent, /official/);
+  assert.match(f.elements.get('bindings').children[0].children[0].children[1].textContent, /github.com/);
+  assert.ok(f.elements.get('bindings').children[0].children[0].children.every((item) => !item.textContent.includes('official')));
   await f.elements.get('bindings').children[0].children[1].listeners.click();
   assert.deepEqual(JSON.parse(JSON.stringify(f.calls.find((call) => call.type === 'identity.binding.unlink').body)), { identity_id: 'binding' });
 });

@@ -2,7 +2,7 @@
   const content = document.getElementById('content');
   const providers = document.getElementById('providers');
   const notice = document.getElementById('notice');
-  const resize = () => oauthBridge.resize(document.documentElement.scrollHeight + 8);
+  const resize = oauthBridge.observeSize(document.querySelector('main'));
   const fail = (message) => { notice.textContent = message; notice.className = 'error'; resize(); };
   async function start(provider) {
     for (const button of providers.querySelectorAll('button')) button.disabled = true;

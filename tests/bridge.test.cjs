@@ -40,7 +40,7 @@ test('request metadata cannot be replaced by config payload', async () => {
   assert.equal(request.type, 'config.save');
   assert.equal(request.bridge_token, 'secret-bridge');
   f.listeners.get('message')({ source: f.parent, data: { source: 'zboard-plugin-host', bridge_token: 'secret-bridge', request_id: request.request_id, ok: false } });
-  await assert.rejects(response, /宿主拒绝/);
+  await assert.rejects(response, /操作未完成/);
 });
 
 test('timeout and page close release all pending requests', async () => {
@@ -54,4 +54,17 @@ test('timeout and page close release all pending requests', async () => {
   await assert.rejects(second, /已关闭/);
   await assert.rejects(f.api.request('config.load'), /插件管理/);
   assert.equal(f.listeners.has('message'), false);
+});
+
+
+test('intrinsic resizing shrinks and does not feed iframe height back into itself', () => {
+  const f = fixture();
+  let height = 94.2;
+  const resize = f.api.observeSize({ getBoundingClientRect: () => ({ height }) });
+  assert.equal(f.sent.at(-1).m.height, 95);
+  resize();
+  assert.equal(f.sent.length, 1);
+  height = 42;
+  resize();
+  assert.equal(f.sent.at(-1).m.height, 42);
 });

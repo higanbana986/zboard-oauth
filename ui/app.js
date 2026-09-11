@@ -43,5 +43,5 @@
  $('reload').addEventListener('click',refresh);
  $('test').addEventListener('click',async()=>{if(busy||revision===null)return;lock(true);try{await oauthBridge.request('config.test');notice('配置检测通过；还需要使用真实客户端完成授权验证。');}catch(err){notice(err.message,true);}finally{lock(false);}});
  addEventListener('pagehide',()=>{$('client-secret').value='';},{once:true});
- const resize=()=>oauthBridge.resize(document.documentElement.scrollHeight+24);if(typeof ResizeObserver!=='undefined')new ResizeObserver(resize).observe(document.body);resize();refresh();
+ oauthBridge.observeSize(document.querySelector('main'));refresh();
 })();
