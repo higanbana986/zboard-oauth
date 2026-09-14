@@ -16,7 +16,7 @@ import (
 )
 
 const ID = "zboard.oauth"
-const Version = "0.0.2-dev.202609111242"
+const Version = "0.0.2-dev.202609140217"
 
 type Server struct {
 	pluginv1.UnimplementedPluginControlServer
